@@ -1,0 +1,78 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "**" ] # run ci pipeline on any commit pushed on any branch
+  pull_request:
+    branches: [ "**" ] # run ci pipeline on any pull-request
+
+
+jobs:
+  build: # build job
+    runs-on: ubuntu-latest # run our actions on a Ubuntu Host Server of latest version(20.4)
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v3 # Checkout the commit that triggered the workflow
+      - name: set up JDK 11 # Downloading and setting up the requested version of Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Android Lint
+        run: ./gradlew lint
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+  test:
+    runs-on: macOS-latest
+    strategy:
+      matrix:
+        api-level: [ 29, 28 ]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: set up JDK 11 # Downloading and setting up the requested version of Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Run Unit Tests
+        run: ./gradlew test
+
+      - name: Upload test results
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: app/build/reports/**
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always() # run this step even if previous step failed
+        with:
+          name: JUnit Tests
+          path: app/build/test-results/**/TEST-*.xml # Path to test results
+          reporter: java-junit # Format of test results
+          fail-on-error: false
+
+      - name: JUnit Report Action
+        uses: mikepenz/action-junit-report@v3.5.2
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: 'app/build/test-results/**/TEST-*.xml'
+
+      - name: Run Instrumentation Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          script: ./gradlew connectedAndroidTest
