@@ -65,11 +65,11 @@ jobs:
           reporter: java-junit # Format of test results
           fail-on-error: false
 
-#      - name: JUnit Report Action
-#        uses: mikepenz/action-junit-report@v3.5.2
-#        if: always() # always run even if the previous step fails
-#        with:
-#          report_paths: 'app/build/test-results/**/TEST-*.xml'
+      - name: JUnit Report Action
+        uses: mikepenz/action-junit-report@v3.5.2
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: 'app/build/test-results/testDebugUnitTest/TEST-*.xml'
 
       - name: Run Instrumentation Tests
         uses: reactivecircus/android-emulator-runner@v2
