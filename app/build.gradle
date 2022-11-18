@@ -24,6 +24,11 @@ android {
 
     buildTypes {
         release {
+            debug {
+                firebaseAppDistribution {
+                    groups="QM"
+                }
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
